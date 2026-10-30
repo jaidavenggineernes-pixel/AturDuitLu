@@ -1,0 +1,146 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  password     String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  settings             UserSettings?
+  transactions         Transaction[]
+  categories           Category[]
+  budgets              Budget[]
+  savingsGoals         SavingsGoal[]
+  savingsContributions SavingsContribution[]
+  notifications        Notification[]
+
+  @@index([email])
+}
+
+model UserSettings {
+  id                  String   @id @default(cuid())
+  userId              String   @unique
+  startingBalance     Float    @default(0)
+  currency            String   @default("IDR")
+  timezone            String   @default("Asia/Jakarta")
+  theme               String   @default("light")
+  notifyBudgetAlert   Boolean  @default(true)
+  notifyGoalMilestone Boolean  @default(true)
+  notifyDailyReminder Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Category {
+  id        String   @id @default(cuid())
+  userId    String?
+  name      String
+  icon      String
+  color     String
+  type      String   // "EXPENSE" or "INCOME"
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user         User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+  budgets      Budget[]
+
+  @@index([userId, type])
+}
+
+model Transaction {
+  id              String   @id @default(cuid())
+  userId          String
+  categoryId      String
+  name            String
+  amount          Float
+  type            String   // "EXPENSE" or "INCOME"
+  transactionDate DateTime
+  paymentMethod   String   // "Cash", "Bank Transfer", "E-Wallet", "Credit Card", etc.
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  @@index([userId, transactionDate])
+  @@index([userId, type])
+  @@index([categoryId])
+}
+
+model Budget {
+  id         String   @id @default(cuid())
+  userId     String
+  categoryId String?
+  amount     Float
+  periodType String   @default("MONTHLY") // "DAILY", "WEEKLY", "MONTHLY"
+  startDate  DateTime
+  endDate    DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  @@index([userId, periodType])
+}
+
+model SavingsGoal {
+  id               String   @id @default(cuid())
+  userId           String
+  name             String
+  targetAmount     Float
+  currentAmount    Float    @default(0)
+  contributionType String   @default("MONTHLY") // "DAILY", "WEEKLY", "MONTHLY", "YEARLY"
+  deadline         DateTime
+  icon             String   @default("Target")
+  color            String   @default("#1E5BF6")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user          User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contributions SavingsContribution[]
+
+  @@index([userId])
+}
+
+model SavingsContribution {
+  id               String   @id @default(cuid())
+  userId           String
+  savingsGoalId    String
+  amount           Float
+  contributionDate DateTime
+  notes            String?
+  createdAt        DateTime @default(now())
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  savingsGoal SavingsGoal @relation(fields: [savingsGoalId], references: [id], onDelete: Cascade)
+
+  @@index([userId, savingsGoalId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  type      String   // "BUDGET_WARNING", "BUDGET_EXCEEDED", "GOAL_MILESTONE", "REMINDER", "SYSTEM"
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+}
