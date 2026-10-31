@@ -183,6 +183,11 @@ export default function RegisterPage() {
           </p>
         </div>
       </div>
+
+      {/* Watermark */}
+      <div className="text-center mt-6 text-xs text-slate-400 font-medium tracking-wider">
+        AturDuit-Lu Design by JNext AI @jaidav
+      </div>
     </div>
   );
 }

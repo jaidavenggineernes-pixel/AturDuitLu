@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { Mail, Lock, Sparkles, ArrowRight } from "lucide-react";
+import { Mail, Lock, ArrowRight } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -40,11 +40,6 @@ export default function LoginPage() {
     }
   }
 
-  function fillDemo() {
-    setEmail("demo@aturduitlu.com");
-    setPassword("password123");
-    setError("");
-  }
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-4">
@@ -126,18 +121,6 @@ export default function LoginPage() {
           </Button>
         </form>
 
-        {/* Quick Demo Credentials Pill */}
-        <div className="pt-2">
-          <button
-            type="button"
-            onClick={fillDemo}
-            className="w-full flex items-center justify-center gap-2 p-2.5 rounded-2xl bg-brand-50 border border-brand-200 text-brand-700 text-xs font-bold hover:bg-brand-100 transition-colors"
-          >
-            <Sparkles className="w-4 h-4 text-brand-500" />
-            Gunakan Akun Demo (Alex Pratama)
-          </button>
-        </div>
-
         <div className="pt-4 border-t border-slate-100 text-center">
           <p className="text-xs text-slate-500">
             Belum memiliki akun?{" "}
@@ -150,6 +133,11 @@ export default function LoginPage() {
             </Link>
           </p>
         </div>
+      </div>
+
+      {/* Watermark */}
+      <div className="text-center mt-6 text-xs text-slate-400 font-medium tracking-wider">
+        AturDuit-Lu Design by JNext AI @jaidav
       </div>
     </div>
   );

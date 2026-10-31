@@ -67,6 +67,11 @@ export function Sidebar() {
           Gunakan aturan 50/30/20: 50% kebutuhan, 30% keinginan, 20% tabungan masa depan.
         </p>
       </div>
+
+      {/* Watermark */}
+      <div className="mt-3 text-center text-[10px] text-slate-400 font-medium tracking-wide">
+        AturDuit-Lu Design by JNext AI @jaidav
+      </div>
     </aside>
   );
 }

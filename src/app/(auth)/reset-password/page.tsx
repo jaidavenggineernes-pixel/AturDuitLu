@@ -194,6 +194,11 @@ export default function ResetPasswordPage() {
           </div>
         </form>
       </div>
+
+      {/* Watermark */}
+      <div className="text-center mt-6 text-xs text-slate-400 font-medium tracking-wider">
+        AturDuit-Lu Design by JNext AI @jaidav
+      </div>
     </div>
   );
 }

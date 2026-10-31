@@ -322,6 +322,11 @@ export function ShowcaseDashboard() {
                   </p>
                 </div>
               </div>
+
+              {/* Watermark in Showcase */}
+              <div className="pt-4 text-center text-xs text-slate-400 font-medium tracking-wider">
+                AturDuit-Lu Design by JNext AI @jaidav
+              </div>
             </div>
           </div>
         </main>
