@@ -1,20 +1,23 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import {
-  Settings,
   User,
   Shield,
   Bell,
   Coins,
-  Globe,
   CheckCircle2,
 } from "lucide-react";
+import { useSettings } from "@/context/SettingsContext";
+import { getCurrencySymbol } from "@/lib/formatters";
 
 export default function SettingsPage() {
-  const [user, setUser] = useState<any>(null);
+  const router = useRouter();
+  const { updateSettings, refreshSettings } = useSettings();
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [startingBalance, setStartingBalance] = useState("0");
@@ -32,17 +35,20 @@ export default function SettingsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [successInfo, setSuccessInfo] = useState("");
 
   async function loadSettings() {
     try {
       setIsLoading(true);
-      const res = await fetch("/api/settings");
+      const res = await fetch("/api/settings", {
+        cache: "no-store",
+        headers: { "Cache-Control": "no-cache" },
+      });
       const data = await res.json();
       if (data.success && data.user) {
-        setUser(data.user);
         setName(data.user.name || "");
         setEmail(data.user.email || "");
-        setStartingBalance(String(data.user.settings?.startingBalance || 0));
+        setStartingBalance(String(data.user.settings?.startingBalance ?? 0));
         setCurrency(data.user.settings?.currency || "IDR");
         setTimezone(data.user.settings?.timezone || "Asia/Jakarta");
         setNotifyBudget(data.user.settings?.notifyBudgetAlert ?? true);
@@ -66,27 +72,28 @@ export default function SettingsPage() {
     setSaveSuccess(false);
 
     try {
-      const res = await fetch("/api/settings", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name,
-          startingBalance: parseFloat(startingBalance) || 0,
-          currency,
-          timezone,
-          notifyBudgetAlert: notifyBudget,
-          notifyGoalMilestone: notifyGoal,
-          notifyDailyReminder: notifyDaily,
-        }),
+      const parsedBalance = parseFloat(startingBalance) || 0;
+      const ok = await updateSettings({
+        name,
+        startingBalance: parsedBalance,
+        currency,
+        timezone,
+        notifyBudgetAlert: notifyBudget,
+        notifyGoalMilestone: notifyGoal,
+        notifyDailyReminder: notifyDaily,
       });
 
-      const data = await res.json();
-      if (data.success) {
+      if (ok) {
         setSaveSuccess(true);
-        setTimeout(() => setSaveSuccess(false), 3000);
+        setSuccessInfo(`Pengaturan berhasil disimpan! Mata uang (${currency}) dan Zona waktu (${timezone}) telah aktif.`);
+        router.refresh();
+        setTimeout(() => setSaveSuccess(false), 5000);
+      } else {
+        alert("Gagal menyimpan pengaturan. Silakan coba lagi.");
       }
     } catch (err) {
       console.error(err);
+      alert("Terjadi kesalahan saat menyimpan pengaturan.");
     } finally {
       setIsSaving(false);
     }
@@ -119,7 +126,7 @@ export default function SettingsPage() {
       } else {
         setPasswordMsg(`❌ ${data.error}`);
       }
-    } catch (err: any) {
+    } catch {
       setPasswordMsg("❌ Gagal memperbarui password.");
     }
   }
@@ -132,6 +139,8 @@ export default function SettingsPage() {
     );
   }
 
+  const activeSymbol = getCurrencySymbol(currency);
+
   return (
     <div className="space-y-6 max-w-4xl">
       <div>
@@ -139,14 +148,14 @@ export default function SettingsPage() {
           Pengaturan Akun & Finansial
         </h1>
         <p className="text-xs font-semibold text-slate-500 mt-0.5">
-          Atur saldo awal, preferensi mata uang, notifikasi, dan keamanan
+          Atur saldo awal, preferensi mata uang, zona waktu, notifikasi, dan keamanan
         </p>
       </div>
 
       {saveSuccess && (
-        <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs font-bold text-emerald-700 flex items-center gap-2">
-          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-          Pengaturan berhasil disimpan!
+        <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs font-bold text-emerald-700 flex items-center gap-2 animate-in fade-in duration-200">
+          <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+          <span>{successInfo || "Pengaturan berhasil disimpan!"}</span>
         </div>
       )}
 
@@ -186,17 +195,17 @@ export default function SettingsPage() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1.5 uppercase tracking-wider">
-                Saldo Awal (Starting Balance)
+                Saldo Awal ({activeSymbol})
               </label>
               <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3 flex items-center font-bold text-slate-400 text-xs">
-                  Rp
+                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center font-bold text-slate-500 text-xs">
+                  {activeSymbol}
                 </span>
                 <input
                   type="number"
                   value={startingBalance}
                   onChange={(e) => setStartingBalance(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 bg-white pl-10 pr-4 py-2.5 text-sm font-semibold text-slate-900 focus:border-brand-500 outline-none"
+                  className="w-full rounded-2xl border border-slate-200 bg-white pl-11 pr-4 py-2.5 text-sm font-semibold text-slate-900 focus:border-brand-500 outline-none"
                 />
               </div>
               <p className="text-[11px] text-slate-400 mt-1">
@@ -211,13 +220,16 @@ export default function SettingsPage() {
               <select
                 value={currency}
                 onChange={(e) => setCurrency(e.target.value)}
-                className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none"
+                className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 font-semibold outline-none focus:border-brand-500"
               >
-                <option value="IDR">Rupiah Indonesia (IDR)</option>
-                <option value="USD">US Dollar (USD)</option>
-                <option value="SGD">Singapore Dollar (SGD)</option>
-                <option value="EUR">Euro (EUR)</option>
+                <option value="IDR">Rupiah Indonesia (Rp - IDR)</option>
+                <option value="USD">US Dollar ($ - USD)</option>
+                <option value="SGD">Singapore Dollar (S$ - SGD)</option>
+                <option value="EUR">Euro (€ - EUR)</option>
               </select>
+              <p className="text-[11px] text-slate-400 mt-1">
+                Format simbol uang di seluruh dashboard & laporan
+              </p>
             </div>
 
             <div>
@@ -227,12 +239,19 @@ export default function SettingsPage() {
               <select
                 value={timezone}
                 onChange={(e) => setTimezone(e.target.value)}
-                className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none"
+                className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 font-semibold outline-none focus:border-brand-500"
               >
-                <option value="Asia/Jakarta">WIB (Asia/Jakarta)</option>
-                <option value="Asia/Makassar">WITA (Asia/Makassar)</option>
-                <option value="Asia/Jayapura">WIT (Asia/Jayapura)</option>
+                <option value="Asia/Jakarta">WIB - Jakarta (Asia/Jakarta)</option>
+                <option value="Asia/Makassar">WITA - Makassar (Asia/Makassar)</option>
+                <option value="Asia/Jayapura">WIT - Jayapura (Asia/Jayapura)</option>
+                <option value="Asia/Singapore">SGT - Singapore (Asia/Singapore)</option>
+                <option value="Asia/Tokyo">JST - Tokyo (Asia/Tokyo)</option>
+                <option value="Europe/London">GMT/BST - London (Europe/London)</option>
+                <option value="America/New_York">EST/EDT - New York (America/New_York)</option>
               </select>
+              <p className="text-[11px] text-slate-400 mt-1">
+                Waktu pencatatan tanggal & jam transaksi
+              </p>
             </div>
           </div>
         </div>
@@ -349,6 +368,11 @@ export default function SettingsPage() {
             Perbarui Password
           </Button>
         </form>
+      </div>
+
+      {/* Watermark */}
+      <div className="text-center pt-4 pb-8 text-xs text-slate-400 font-medium tracking-wider">
+        AturDuit-Lu Design by JNext AI @jaidav
       </div>
     </div>
   );

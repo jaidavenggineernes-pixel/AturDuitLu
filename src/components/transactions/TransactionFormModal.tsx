@@ -5,6 +5,7 @@ import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { CategoryIcon } from "@/lib/icons";
+import { useSettings } from "@/context/SettingsContext";
 
 interface TransactionFormModalProps {
   isOpen: boolean;
@@ -19,6 +20,7 @@ export function TransactionFormModal({
   onSuccess,
   transactionToEdit,
 }: TransactionFormModalProps) {
+  const { currencySymbol } = useSettings();
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
   const [type, setType] = useState<"EXPENSE" | "INCOME">("EXPENSE");
@@ -201,11 +203,11 @@ export function TransactionFormModal({
         {/* Amount */}
         <div>
           <label className="block text-xs font-semibold text-slate-700 mb-1.5 uppercase tracking-wider">
-            Nominal (Rupiah)
+            Nominal Transaksi ({currencySymbol})
           </label>
           <div className="relative">
             <span className="absolute inset-y-0 left-0 pl-4 flex items-center font-bold text-slate-400 text-sm">
-              Rp
+              {currencySymbol}
             </span>
             <input
               type="number"

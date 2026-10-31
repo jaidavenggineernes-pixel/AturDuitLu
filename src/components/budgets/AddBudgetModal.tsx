@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
+import { useSettings } from "@/context/SettingsContext";
 
 interface AddBudgetModalProps {
   isOpen: boolean;
@@ -17,6 +18,7 @@ export function AddBudgetModal({
   onSuccess,
   budgetToEdit,
 }: AddBudgetModalProps) {
+  const { currencySymbol } = useSettings();
   const [amount, setAmount] = useState("");
   const [categoryId, setCategoryId] = useState("ALL");
   const [periodType, setPeriodType] = useState("MONTHLY");
@@ -110,11 +112,11 @@ export function AddBudgetModal({
 
         <div>
           <label className="block text-xs font-semibold text-slate-700 mb-1.5 uppercase tracking-wider">
-            Nominal Batas Anggaran (Rupiah)
+            Nominal Batas Anggaran ({currencySymbol})
           </label>
           <div className="relative">
             <span className="absolute inset-y-0 left-0 pl-4 flex items-center font-bold text-slate-400 text-sm">
-              Rp
+              {currencySymbol}
             </span>
             <input
               type="number"

@@ -35,6 +35,8 @@ export async function GET(request: Request) {
       orderBy: { transactionDate: "desc" },
     });
 
+    const currency = user.settings?.currency || "IDR";
+    const timezone = user.settings?.timezone || "Asia/Jakarta";
     const timestamp = new Date().toISOString().split("T")[0];
 
     if (format === "csv") {
@@ -45,7 +47,7 @@ export async function GET(request: Request) {
         "Nama Transaksi",
         "Jenis",
         "Kategori",
-        "Nominal (IDR)",
+        `Nominal (${currency})`,
         "Metode Pembayaran",
         "Catatan",
       ];
@@ -100,8 +102,8 @@ export async function GET(request: Request) {
         <div class="header-box">
           <h2>AturDuitLu - Laporan Keuangan</h2>
           <p>Pengguna: ${user.name} (${user.email})</p>
-          <p>Tanggal Cetak: ${new Date().toLocaleString("id-ID")}</p>
-          <p>Total Pemasukan: Rp ${new Intl.NumberFormat("id-ID").format(totalIncome)} | Total Pengeluaran: Rp ${new Intl.NumberFormat("id-ID").format(totalExpense)} | Arus Kas Bersih: Rp ${new Intl.NumberFormat("id-ID").format(netFlow)}</p>
+          <p>Tanggal Cetak: ${new Date().toLocaleString("id-ID", { timeZone: timezone })}</p>
+          <p>Total Pemasukan: ${currency} ${new Intl.NumberFormat("id-ID").format(totalIncome)} | Total Pengeluaran: ${currency} ${new Intl.NumberFormat("id-ID").format(totalExpense)} | Arus Kas Bersih: ${currency} ${new Intl.NumberFormat("id-ID").format(netFlow)}</p>
         </div>
         <table>
           <thead>
@@ -111,7 +113,7 @@ export async function GET(request: Request) {
               <th>Nama Transaksi</th>
               <th>Jenis</th>
               <th>Kategori</th>
-              <th>Nominal (IDR)</th>
+              <th>Nominal (${currency})</th>
               <th>Metode Pembayaran</th>
               <th>Catatan</th>
             </tr>
@@ -122,7 +124,7 @@ export async function GET(request: Request) {
                 (t, idx) => `
               <tr>
                 <td>${idx + 1}</td>
-                <td>${new Date(t.transactionDate).toLocaleDateString("id-ID")}</td>
+                <td>${new Date(t.transactionDate).toLocaleDateString("id-ID", { timeZone: timezone })}</td>
                 <td>${t.name}</td>
                 <td class="${t.type === "INCOME" ? "income" : "expense"}">${
                   t.type === "INCOME" ? "Pemasukan" : "Pengeluaran"
@@ -137,17 +139,17 @@ export async function GET(request: Request) {
               .join("")}
             <tr class="total-row">
               <td colspan="5" style="text-align: right;">TOTAL PEMASUKAN</td>
-              <td class="income">Rp ${new Intl.NumberFormat("id-ID").format(totalIncome)}</td>
+              <td class="income">${currency} ${new Intl.NumberFormat("id-ID").format(totalIncome)}</td>
               <td colspan="2"></td>
             </tr>
             <tr class="total-row">
               <td colspan="5" style="text-align: right;">TOTAL PENGELUARAN</td>
-              <td class="expense">Rp ${new Intl.NumberFormat("id-ID").format(totalExpense)}</td>
+              <td class="expense">${currency} ${new Intl.NumberFormat("id-ID").format(totalExpense)}</td>
               <td colspan="2"></td>
             </tr>
             <tr class="total-row">
               <td colspan="5" style="text-align: right;">ARUS KAS BERSIH</td>
-              <td>Rp ${new Intl.NumberFormat("id-ID").format(netFlow)}</td>
+              <td>${currency} ${new Intl.NumberFormat("id-ID").format(netFlow)}</td>
               <td colspan="2"></td>
             </tr>
           </tbody>

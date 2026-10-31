@@ -59,6 +59,9 @@ export async function getSessionUser() {
       settings: user.settings,
     };
   } catch (error) {
+    if ((error as any)?.digest === "DYNAMIC_SERVER_USAGE") {
+      throw error;
+    }
     console.error("Session verification error:", error);
     return null;
   }

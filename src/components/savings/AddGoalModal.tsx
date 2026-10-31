@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { useSettings } from "@/context/SettingsContext";
 
 interface AddGoalModalProps {
   isOpen: boolean;
@@ -12,6 +13,7 @@ interface AddGoalModalProps {
 }
 
 export function AddGoalModal({ isOpen, onClose, onSuccess }: AddGoalModalProps) {
+  const { currencySymbol } = useSettings();
   const [name, setName] = useState("");
   const [targetAmount, setTargetAmount] = useState("");
   const [contributionType, setContributionType] = useState("MONTHLY");
@@ -99,11 +101,11 @@ export function AddGoalModal({ isOpen, onClose, onSuccess }: AddGoalModalProps) 
 
         <div>
           <label className="block text-xs font-semibold text-slate-700 mb-1.5 uppercase tracking-wider">
-            Target Nominal (Rupiah)
+            Target Nominal ({currencySymbol})
           </label>
           <div className="relative">
             <span className="absolute inset-y-0 left-0 pl-4 flex items-center font-bold text-slate-400 text-sm">
-              Rp
+              {currencySymbol}
             </span>
             <input
               type="number"

@@ -10,8 +10,10 @@ import { CategoryDonutChart } from "@/components/charts/CategoryDonutChart";
 import { TransactionFormModal } from "@/components/transactions/TransactionFormModal";
 import { Sparkles, ArrowUpRight, TrendingUp } from "lucide-react";
 import { formatDateIndo } from "@/lib/formatters";
+import { useSettings } from "@/context/SettingsContext";
 
 export default function DashboardPage() {
+  const { timezone } = useSettings();
   const [data, setData] = useState<any>(null);
   const [recentTransactions, setRecentTransactions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -67,6 +69,7 @@ export default function DashboardPage() {
     day: "numeric",
     month: "long",
     year: "numeric",
+    timeZone: timezone || "Asia/Jakarta",
   }).format(new Date());
 
   if (isLoading && !data) {
@@ -104,7 +107,7 @@ export default function DashboardPage() {
             Dashboard Keuangan
           </h1>
           <p className="text-xs font-semibold text-slate-500 mt-0.5">
-            {currentDateText} • Zona Waktu Asia/Jakarta
+            {currentDateText} • Zona Waktu {timezone || "Asia/Jakarta"}
           </p>
         </div>
         <div className="flex items-center gap-2">

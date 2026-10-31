@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { formatCurrency } from "@/lib/formatters";
+import { useSettings } from "@/context/SettingsContext";
 
 interface AddContributionModalProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ export function AddContributionModal({
   onSuccess,
   goal,
 }: AddContributionModalProps) {
+  const { currencySymbol } = useSettings();
   const [amount, setAmount] = useState("");
   const [notes, setNotes] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -91,11 +93,11 @@ export function AddContributionModal({
 
         <div>
           <label className="block text-xs font-semibold text-slate-700 mb-1.5 uppercase tracking-wider">
-            Nominal Setoran (Rupiah)
+            Nominal Setoran ({currencySymbol})
           </label>
           <div className="relative">
             <span className="absolute inset-y-0 left-0 pl-4 flex items-center font-bold text-slate-400 text-sm">
-              Rp
+              {currencySymbol}
             </span>
             <input
               type="number"

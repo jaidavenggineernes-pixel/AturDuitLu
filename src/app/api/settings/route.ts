@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getSessionUser } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET() {
   try {
     const user = await getSessionUser();
@@ -14,15 +17,24 @@ export async function GET() {
       include: { settings: true },
     });
 
-    return NextResponse.json({
-      success: true,
-      user: {
-        id: dbUser?.id,
-        name: dbUser?.name,
-        email: dbUser?.email,
-        settings: dbUser?.settings,
+    return NextResponse.json(
+      {
+        success: true,
+        user: {
+          id: dbUser?.id,
+          name: dbUser?.name,
+          email: dbUser?.email,
+          settings: dbUser?.settings,
+        },
       },
-    });
+      {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+          Pragma: "no-cache",
+          Expires: "0",
+        },
+      }
+    );
   } catch (error) {
     console.error("Settings GET error:", error);
     return NextResponse.json(
@@ -51,18 +63,25 @@ export async function PUT(request: Request) {
       notifyDailyReminder,
     } = body;
 
-    if (name) {
-      await prisma.user.update({
+    let updatedUserName = user.name;
+    if (name && typeof name === "string" && name.trim().length > 0) {
+      const u = await prisma.user.update({
         where: { id: user.id },
         data: { name: name.trim() },
       });
+      updatedUserName = u.name;
     }
+
+    const parsedStartingBalance =
+      startingBalance !== undefined && startingBalance !== null
+        ? parseFloat(String(startingBalance)) || 0
+        : 0;
 
     const updatedSettings = await prisma.userSettings.upsert({
       where: { userId: user.id },
       create: {
         userId: user.id,
-        startingBalance: startingBalance !== undefined ? parseFloat(startingBalance) : 0,
+        startingBalance: parsedStartingBalance,
         currency: currency || "IDR",
         timezone: timezone || "Asia/Jakarta",
         theme: theme || "light",
@@ -71,7 +90,7 @@ export async function PUT(request: Request) {
         notifyDailyReminder: notifyDailyReminder ?? true,
       },
       update: {
-        ...(startingBalance !== undefined ? { startingBalance: parseFloat(startingBalance) } : {}),
+        ...(startingBalance !== undefined ? { startingBalance: parsedStartingBalance } : {}),
         ...(currency ? { currency } : {}),
         ...(timezone ? { timezone } : {}),
         ...(theme ? { theme } : {}),
@@ -81,11 +100,23 @@ export async function PUT(request: Request) {
       },
     });
 
-    return NextResponse.json({
-      success: true,
-      message: "Pengaturan berhasil disimpan.",
-      settings: updatedSettings,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Pengaturan berhasil disimpan.",
+        user: {
+          id: user.id,
+          name: updatedUserName,
+          email: user.email,
+        },
+        settings: updatedSettings,
+      },
+      {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+        },
+      }
+    );
   } catch (error) {
     console.error("Settings PUT error:", error);
     return NextResponse.json(

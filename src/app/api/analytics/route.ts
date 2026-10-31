@@ -8,6 +8,8 @@ import {
   aggregateCategories,
 } from "@/lib/calculations";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: Request) {
   try {
     const user = await getSessionUser();
@@ -19,9 +21,19 @@ export async function GET(request: Request) {
     const period = searchParams.get("period") || "monthly"; // "daily", "weekly", "monthly", "yearly"
 
     const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentMonth = now.getMonth();
-    const currentDate = now.getDate();
+    const userTz = user.settings?.timezone || "Asia/Jakarta";
+    const tzFormatter = new Intl.DateTimeFormat("en-US", {
+      timeZone: userTz,
+      year: "numeric",
+      month: "numeric",
+      day: "numeric",
+    });
+    const tzParts = tzFormatter.formatToParts(now);
+    const tzMap: Record<string, string> = {};
+    for (const p of tzParts) tzMap[p.type] = p.value;
+    const currentYear = parseInt(tzMap.year, 10);
+    const currentMonth = parseInt(tzMap.month, 10) - 1;
+    const currentDate = parseInt(tzMap.day, 10);
 
     // User Settings starting balance
     const startingBalance = user.settings?.startingBalance || 0;
